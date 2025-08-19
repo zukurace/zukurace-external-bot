@@ -1,6 +1,9 @@
 # ZukuRace-external-bot-SDK
 This is IPC external bot controll for ZukuRace.
 
+To enable external control press F5 once you launched a game. It will create all necessay handles for IPC.
+
+<br>
 
 WHAT DOES THIS CODE DO:
 - Receives position, rotation, ans speed magnitude of the car from the game (10 times/s).

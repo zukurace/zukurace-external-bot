@@ -13,10 +13,15 @@ You can try ZukuRace External Bot in the game Demo version for free.
 
 
 
+
 WHAT DOES THIS CODE DO:
 - Receives position, rotation, ans speed magnitude of the car from the game (10 times/s).
 - Sends input data (throttle, braking, steering) to the game back.
 Data transmission is implemented with shared memory and semaphores IPC.
+
+To enable external control press F5 in game once you launched it.
+It will create all necessay handles for IPC.
+
 
 
 
@@ -26,12 +31,14 @@ Properties -> VC++ Directories -> \path\to\glm;$(IncludePath)
 
 
 
+
 At this moment:
 - It works only on Windows.
 - The game does not send nearest race car positions (will be fixed first).
 - The bot connection works only with RR01 and Night City track.
 - RR01 car is unbalanced: slow speed understeer, high speed oversteer.
 All this will be fixed later.
+
 
 
 
@@ -172,6 +179,9 @@ int main()
 
     gameData->msgBot = MsgBot::Start;
     ReleaseSemaphore(semaphoreBot, 1, nullptr);
+
+    // To enable external control press F5 in game once you launched it.
+    // It will create all necessay handles for IPC.
 
     while (mustLoop) {
         DWORD waitResult = WaitForSingleObject(semaphoreGame, INFINITE);

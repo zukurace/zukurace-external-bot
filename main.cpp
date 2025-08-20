@@ -142,6 +142,8 @@ int main()
         return 1;
     }
 
+    WaitForSingleObject(semaphoreGame, 1);
+
     HANDLE semaphoreBot = CreateSemaphore(nullptr, 0, 1, SEMAPHORE_BOT_NAME);
     if (!semaphoreBot) {
         LOGE("CreateSemaphore CarInputUpdated failed: %d", GetLastError());
@@ -150,8 +152,9 @@ int main()
         return 1;
     }
 
-    printf("Waiting for game data, press 'q' to exit:\n");
-    printf("Closing this window without 'q' car continues moving with last input data.\n");
+    WaitForSingleObject(semaphoreBot, 1);
+
+    printf("press F5 in game once, press 'q' here to exit.\nWaiting for game data...\n");
 
     //
     // Wait for exit loop things

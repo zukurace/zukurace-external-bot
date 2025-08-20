@@ -1,5 +1,8 @@
-# ZukuRace-external-bot-SDK
-This is IPC external bot controll for ZukuRace.
+# ZukuRace external bot SDK
+
+This is IPC external bot controll for [ZukuRace](https://store.steampowered.com/app/3012260/ZukuRace/) racing game.
+
+<img src="/zukurace_screenshot.jpg" width="75%">
 
 To enable external control press F5 in game once you launched it. It will create all necessay handles for IPC.
 

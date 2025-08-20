@@ -4,7 +4,7 @@
 
 #include "MathLib.h"
 
-constexpr int s_reparamSegmentNum = 50;
+constexpr int s_reparamSegmentNum = 25;
 constexpr int closestPointNumIterations = 20;
 
 inline glm::dvec3 BezierPos(const glm::dvec3& p0, const glm::dvec3& t0, const glm::dvec3& p1, const glm::dvec3& t1, double a)
@@ -35,24 +35,54 @@ Spline::Spline()
         { glm::dvec3(-24075.0, 30843.5, 0.0), glm::dvec3(-8498.8, 43823.5, 0.0), 0.0 },
     };
 
-    // make reparamTable (to calculate from key to distance and vv)
-    double dist = 0;
-    glm::dvec3 pPrev = m_bezierPoints[0].p;
+    double prevSegmentDist = 0;
     for (int segmentIndex = 0; segmentIndex < m_bezierPoints.size(); ++segmentIndex) {
         BezierPoint& b0 = m_bezierPoints[segmentIndex];
         BezierPoint& b1 = m_bezierPoints[(segmentIndex + 1) % m_bezierPoints.size()];
-        for (int i = 0; i < s_reparamSegmentNum; ++i) {
-            double alpha = double(i) / s_reparamSegmentNum;
-            glm::dvec3 p = BezierPos(b0.p, b0.t, b1.p, b1.t, alpha);
-            double reparamSegmentLength = glm::distance(pPrev, p);
-            m_reparamTable.push_back({ segmentIndex + alpha, dist });
-            dist += reparamSegmentLength;
-            pPrev = p;
+
+        auto calcLength = [&b0, &b1](double param) {
+            glm::dvec3 C1 = ((b0.p - b1.p) * 2. + b0.t + b1.t) * 3.;
+            glm::dvec3 C2 = (b1.p - b0.p) * 6. - b0.t * 4. - b1.t * 2.;
+            glm::dvec3 C3 = b0.t;
+            static const glm::dvec2 LegendreGaussCoefficients[5] = {
+                { 0.0, 0.5688889 }, { -0.5384693, 0.47862867 }, { 0.5384693, 0.47862867 },
+                { -0.90617985, 0.23692688 }, { 0.90617985, 0.23692688 }
+            };
+
+            double length = 0.0f;
+            const double halfParam = param * 0.5f;
+            for (int i = 0; i < 5; ++i) {
+                auto& coeff = LegendreGaussCoefficients[i];
+                const double Alpha = halfParam * (1.0f + coeff.x);
+                const glm::dvec3 deriv = ((C1 * Alpha + C2) * Alpha + C3);
+                length += glm::length(deriv) * coeff.y;
+            }
+
+            return length * halfParam;
+        };
+
+        for (int reparamIndex = 0; reparamIndex < s_reparamSegmentNum; ++reparamIndex) {
+            double param = double(reparamIndex) / s_reparamSegmentNum;
+            auto lenCurrent = calcLength(param);
+            m_reparamTable.push_back({ segmentIndex + param, prevSegmentDist + lenCurrent });
         }
+
+        prevSegmentDist += calcLength(1.0);
     }
 
-    m_reparamTable.push_back({ (double)m_bezierPoints.size(), dist });
-    m_splineLength = dist;
+    m_reparamTable.push_back({ (double)m_bezierPoints.size(), prevSegmentDist });
+    m_splineLength = prevSegmentDist;
+
+    /*for (int i = 0; i < m_reparamTable.size(); ++i) {
+        auto& r = m_reparamTable[i];
+        if (i % 6 == 0)
+            printf("\n");
+        printf("vec2(%.2f, %.0f), ", r.key, r.distance);
+    }
+
+    printf("\nm_reparamTable %d", m_reparamTable.size());
+
+    exit(0);*/
 }
 
 double Spline::KeyToDistance(double key) const
